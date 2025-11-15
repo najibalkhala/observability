@@ -25,6 +25,10 @@ ingester:
   wal:
     dir: /loki/wal
 
+compactor:
+  working_directory: /loki/compactor
+  shared_store: filesystem
+
 limits_config:
   allow_structured_metadata: false
   ingestion_rate_mb: 10
