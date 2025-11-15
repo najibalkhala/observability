@@ -58,5 +58,5 @@ services:
 
 volumes:
   mimir-data:
-  loki-data:
+  loki-data:/loki
   grafana-data:
