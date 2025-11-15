@@ -1,5 +1,6 @@
 server:
   http_listen_port: 3200
+  log_level: info
 
 distributor:
   receivers:
@@ -8,7 +9,12 @@ distributor:
         http:
         grpc:
 
-search_enabled: true
+ingester:
+  max_block_duration: 5m
+
+compactor:
+  compaction:
+    block_retention: 24h
 
 storage:
   trace:
