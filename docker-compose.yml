@@ -31,6 +31,7 @@ services:
     image: grafana/tempo:latest
     volumes:
       - ./tempo/tempo.yaml:/etc/tempo/tempo.yaml
+      - tempo-data:/var/tempo
     command: -config.file=/etc/tempo/tempo.yaml
     ports:
       - "3200:3200"
@@ -60,3 +61,4 @@ volumes:
   mimir-data:
   loki-data:
   grafana-data:
+  tempo-data:

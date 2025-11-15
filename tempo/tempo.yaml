@@ -8,8 +8,10 @@ distributor:
         http:
         grpc:
 
+search_enabled: true
+
 storage:
   trace:
     backend: local
     local:
-      path: /var/tempo
+      path: /var/tempo/traces
