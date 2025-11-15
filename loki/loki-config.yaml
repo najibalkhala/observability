@@ -2,12 +2,7 @@ auth_enabled: false
 
 server:
   http_listen_port: 3100
-
-ingester:
-  lifecycler:
-    ring:
-      replication_factor: 1
-  chunk_idle_period: 3m
+  grpc_listen_port: 9095
 
 schema_config:
   configs:
@@ -23,8 +18,13 @@ storage_config:
   boltdb_shipper:
     active_index_directory: /loki/index
     cache_location: /loki/cache
+
   filesystem:
     directory: /loki/chunks
+
+ingester:
+  wal:
+    directory: /loki/wal
 
 limits_config:
   ingestion_rate_mb: 10
