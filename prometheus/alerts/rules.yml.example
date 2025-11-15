@@ -1,0 +1,203 @@
+groups:
+  - name: system_alerts
+    interval: 30s
+    rules:
+      # High CPU usage
+      - alert: HighCPUUsage
+        expr: 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is above 80% (current value: {{ $value }}%)"
+
+      # Critical CPU usage
+      - alert: CriticalCPUUsage
+        expr: 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 95
+        for: 2m
+        labels:
+          severity: critical
+          component: system
+        annotations:
+          summary: "Critical CPU usage detected"
+          description: "CPU usage is above 95% (current value: {{ $value }}%)"
+
+      # High memory usage
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is above 80% (current value: {{ $value }}%)"
+
+      # Critical memory usage
+      - alert: CriticalMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 90
+        for: 2m
+        labels:
+          severity: critical
+          component: system
+        annotations:
+          summary: "Critical memory usage detected"
+          description: "Memory usage is above 90% (current value: {{ $value }}%)"
+
+      # High disk usage
+      - alert: HighDiskUsage
+        expr: (node_filesystem_size_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs|vfat"} - node_filesystem_avail_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs|vfat"}) / node_filesystem_size_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs|vfat"} * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High disk usage on {{ $labels.mountpoint }}"
+          description: "Disk usage is above 80% (current value: {{ $value }}%)"
+
+      # Critical disk usage
+      - alert: CriticalDiskUsage
+        expr: (node_filesystem_size_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs|vfat"} - node_filesystem_avail_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs|vfat"}) / node_filesystem_size_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs|vfat"} * 100 > 90
+        for: 2m
+        labels:
+          severity: critical
+          component: system
+        annotations:
+          summary: "Critical disk usage on {{ $labels.mountpoint }}"
+          description: "Disk usage is above 90% (current value: {{ $value }}%)"
+
+  - name: container_alerts
+    interval: 30s
+    rules:
+      # Container high CPU
+      - alert: ContainerHighCPU
+        expr: rate(container_cpu_usage_seconds_total{name!=""}[5m]) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          component: container
+        annotations:
+          summary: "High CPU usage in container {{ $labels.name }}"
+          description: "Container {{ $labels.name }} CPU usage is above 80%"
+
+      # Container high memory
+      - alert: ContainerHighMemory
+        expr: container_memory_usage_bytes{name!=""} > 2000000000
+        for: 5m
+        labels:
+          severity: warning
+          component: container
+        annotations:
+          summary: "High memory usage in container {{ $labels.name }}"
+          description: "Container {{ $labels.name }} is using more than 2GB of memory"
+
+      # Container restarting
+      - alert: ContainerRestarting
+        expr: rate(container_last_seen{name!=""}[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+          component: container
+        annotations:
+          summary: "Container {{ $labels.name }} is restarting"
+          description: "Container {{ $labels.name }} has restarted multiple times"
+
+  - name: service_alerts
+    interval: 30s
+    rules:
+      # Service down
+      - alert: ServiceDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: service
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "Service {{ $labels.job }} has been down for more than 2 minutes"
+
+      # High scrape duration
+      - alert: HighScrapeDuration
+        expr: scrape_duration_seconds > 1
+        for: 5m
+        labels:
+          severity: warning
+          component: monitoring
+        annotations:
+          summary: "High scrape duration for {{ $labels.job }}"
+          description: "Scraping {{ $labels.job }} takes more than 1 second"
+
+  - name: loki_alerts
+    interval: 30s
+    rules:
+      # High error rate in logs
+      - alert: HighErrorRateInLogs
+        expr: sum(rate({job="laravel"} |= "error" [5m])) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: application
+        annotations:
+          summary: "High error rate detected in application logs"
+          description: "More than 10 errors per second in application logs"
+
+  - name: observability_stack_alerts
+    interval: 30s
+    rules:
+      # Grafana down
+      - alert: GrafanaDown
+        expr: up{job="grafana"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: observability
+        annotations:
+          summary: "Grafana is down"
+          description: "Grafana has been unreachable for 2 minutes"
+
+      # Prometheus down
+      - alert: PrometheusDown
+        expr: up{job="prometheus"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: observability
+        annotations:
+          summary: "Prometheus is down"
+          description: "Prometheus has been unreachable for 2 minutes"
+
+      # Loki down
+      - alert: LokiDown
+        expr: up{job="loki"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: observability
+        annotations:
+          summary: "Loki is down"
+          description: "Loki has been unreachable for 2 minutes"
+
+      # Tempo down
+      - alert: TempoDown
+        expr: up{job="tempo"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: observability
+        annotations:
+          summary: "Tempo is down"
+          description: "Tempo has been unreachable for 2 minutes"
+
+      # Mimir down
+      - alert: MimirDown
+        expr: up{job="mimir"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: observability
+        annotations:
+          summary: "Mimir is down"
+          description: "Mimir has been unreachable for 2 minutes"
+

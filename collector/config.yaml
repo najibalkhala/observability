@@ -2,31 +2,79 @@ receivers:
   otlp:
     protocols:
       grpc:
+        endpoint: 0.0.0.0:4317
       http:
+        endpoint: 0.0.0.0:4318
+  
+  # Prometheus receiver for scraping metrics
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: 'otel-collector'
+          scrape_interval: 10s
+          static_configs:
+            - targets: ['0.0.0.0:8888']
 
 exporters:
   otlphttp:
     endpoint: http://tempo:4318
+    tls:
+      insecure: true
+  
   loki:
     endpoint: http://loki:3100/loki/api/v1/push
+  
   prometheusremotewrite:
     endpoint: http://mimir:8080/api/v1/push
+    tls:
+      insecure: true
+  
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+  
   logging:
+    loglevel: info
 
 processors:
   batch:
+    timeout: 10s
+    send_batch_size: 1024
+  
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+  
+  attributes:
+    actions:
+      - key: environment
+        value: production
+        action: insert
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+  
+  pprof:
+    endpoint: 0.0.0.0:1777
+  
+  zpages:
+    endpoint: 0.0.0.0:55679
 
 service:
+  extensions: [health_check, pprof, zpages]
+  
   pipelines:
     traces:
       receivers: [otlp]
-      processors: [batch]
+      processors: [memory_limiter, batch, attributes]
       exporters: [otlphttp, logging]
+    
     logs:
       receivers: [otlp]
-      processors: [batch]
+      processors: [memory_limiter, batch, attributes]
       exporters: [loki, logging]
+    
     metrics:
-      receivers: [otlp]
-      processors: [batch]
-      exporters: [prometheusremotewrite, logging]
+      receivers: [otlp, prometheus]
+      processors: [memory_limiter, batch, attributes]
+      exporters: [prometheusremotewrite, prometheus, logging]

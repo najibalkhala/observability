@@ -1,0 +1,42 @@
+# Docker Compose Override Example
+# Copy this file to docker-compose.override.yml and customize as needed
+# This file is automatically loaded by docker-compose
+
+services:
+  grafana:
+    environment:
+      # Enable development mode
+      - GF_SERVER_SERVE_FROM_SUB_PATH=false
+      - GF_LOG_LEVEL=debug
+      
+      # Enable anonymous access (development only!)
+      # - GF_AUTH_ANONYMOUS_ENABLED=true
+      # - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      
+      # Enable debugging
+      # - GF_DEBUG=true
+      
+  prometheus:
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=7d'  # Shorter retention for dev
+      - '--web.enable-lifecycle'
+      - '--log.level=debug'
+
+  loki:
+    # Use shorter retention for development
+    environment:
+      - LOKI_LOG_LEVEL=debug
+
+  tempo:
+    # Enable debug logging
+    environment:
+      - TEMPO_LOG_LEVEL=debug
+
+  otel-collector:
+    # Expose additional ports for debugging
+    ports:
+      - "55679:55679"  # zpages
+      - "1777:1777"    # pprof
+
