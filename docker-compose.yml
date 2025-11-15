@@ -57,6 +57,6 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=StrongPass123
 
 volumes:
-  - mimir-data:
-  - loki-data:/loki
-  - grafana-data:
+  mimir-data:
+  loki-data:
+  grafana-data:
